@@ -9,7 +9,7 @@ export class NumberInRange {
         this._min = min;
         this._max = max;
         if (min >= max) {
-            throw new Error(`Min value ${min} must be lower than max ${max}`);
+            throw new RangeError(`Min value ${min} must be lower than max ${max}`);
         }
         this.value = defaultValue;
     }
@@ -20,7 +20,7 @@ export class NumberInRange {
 
     set value(value: number) {
         if (Number.isNaN(value)) {
-            throw new Error(`Value cannot be NaN`);
+            throw new RangeError(`Value cannot be NaN`);
         }
         this._value = NumberInRange.clamp(value, this._min, this._max);
     }
