@@ -1,0 +1,25 @@
+{
+  "name": "inventorybackend_test",
+  "version": "0.0.1",
+  "description": "testovoe zadanie",
+  "homepage": "https://github.com/GrafEnters/inventorybackend_test#readme",
+  "bugs": {
+    "url": "https://github.com/GrafEnters/inventorybackend_test/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GrafEnters/inventorybackend_test.git"
+  },
+  "license": "ISC",
+  "author": "grafEnters",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "npm run build && node dist/main.js"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2"
+  }
+}
