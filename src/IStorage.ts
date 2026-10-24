@@ -13,4 +13,6 @@ export interface IStorage {
     getGroundItem(itemId: UUID): Promise<IGroundItem|null>;
 
     deleteGroundItem(itemId: UUID): Promise<IItemInstance|null>;
+
+    deleteGroundItems(itemIds: UUID[]): Promise<number>;
 }

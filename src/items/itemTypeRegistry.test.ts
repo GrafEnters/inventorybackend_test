@@ -1,7 +1,7 @@
 import {describe, it} from "node:test";
 import assert from "node:assert/strict";
-import {ItemTypeRegistry} from "./items/itemTypeRegistry.js";
-import {ItemType} from "./items/itemType.js";
+import {ItemTypeRegistry} from "./itemTypeRegistry.js";
+import {ItemType} from "./itemType.js";
 
 describe("ItemTypeRegistry", () => {
     it("Identical id throws", () => {

@@ -1,5 +1,6 @@
 import {ItemType} from "./itemType.js";
 import type {Player} from "../player.js";
+import type {Result} from "../result.js";
 
 export class Medkit extends ItemType {
 
@@ -13,12 +14,12 @@ export class Medkit extends ItemType {
         this.restoreMax = restoreMax;
     }
 
-    onUse(player: Player): boolean {
+    onUse(player: Player): Result {
         const toRestore = this.restoreMax - player.health;
         if (toRestore > 0) {
             player.changeHealth(toRestore);
-            return true;
+            return {ok: true};
         }
-        return false;
+        return {ok: false, reason: "Nothing to restore"};
     }
 }

@@ -1,4 +1,5 @@
 import type {Player} from "../player.js";
+import type {Result} from "../result.js";
 
 export abstract class ItemType {
     public readonly typeId: string;
@@ -15,8 +16,8 @@ export abstract class ItemType {
         this.maxStack = maxStack;
     }
 
-    public onUse(player: Player): boolean {
-        return false;
+    public onUse(player: Player): Result {
+        return {ok: false, reason: "Unusable item type"};
     }
 
     public onPickup(player: Player): void {

@@ -47,12 +47,25 @@ export class Player {
         return this._ammo;
     }
 
+    set ammo(value: number) {
+        this._ammo = value;
+    }
+
     changeHealth(delta: number): void {
         this._health.value += delta;
     }
 
     changeArmor(delta: number): void {
         this._armor.value += delta;
+    }
+
+    set pos(value: Pos) {
+        this._pos = {...value};
+    }
+
+    move(delta: Pos) {
+        this._pos.x += delta.x;
+        this._pos.y += delta.y;
     }
 
 }

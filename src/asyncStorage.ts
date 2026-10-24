@@ -1,6 +1,6 @@
 import type {UUID} from "node:crypto";
 import type {IGroundItem, IItemInstance} from "./iitemInstance.js";
-import type {Pos} from "./pos.js";
+import {type Pos, PosMath} from "./pos.js";
 import type {IStorageWithFilters} from "./IStorageWithFilters.js";
 
 export class AsyncStorage implements IStorageWithFilters {
@@ -58,8 +58,19 @@ export class AsyncStorage implements IStorageWithFilters {
         return null;
     }
 
+    async deleteGroundItems(itemIds: UUID[]): Promise<number> {
+        await this.randomDelay();
+        let deletedAmount = 0;
+        for (const itemId of itemIds) {
+            if(this.ground.delete(itemId)){
+                deletedAmount++;
+            }
+        }
+        return deletedAmount;
+    }
+
     async getGroundItemsInRange(pos: Pos, range: number): Promise<IGroundItem[]> {
-        const near = [...this.ground.values()].filter(item => this.isNear(item.pos, pos, range));
+        const near = [...this.ground.values()].filter(item => PosMath.isNear(item.pos, pos, range));
         await this.randomDelay();
         return structuredClone(near);
     }
@@ -76,7 +87,5 @@ export class AsyncStorage implements IStorageWithFilters {
         await new Promise(resolve => setTimeout(resolve, delay));
     }
 
-    private isNear(pos1: Pos, pos2: Pos, range: number): boolean {
-        return Math.pow(pos1.x - pos2.x, 2) + Math.pow(pos1.y - pos2.y, 2) <= range * range;
-    }
+
 }

@@ -2,9 +2,9 @@ import {describe, it} from "node:test";
 import {AsyncStorage} from "./asyncStorage.js";
 import {randomUUID} from "node:crypto";
 import assert from "node:assert/strict";
-import type {IGroundItem, IItemInstance} from "./iitemInstance.js";
+import type {IItemInstance} from "./iitemInstance.js";
 
-describe("AsyncStorage", async () => {
+describe("AsyncStorage", () => {
     it("Double deletion of ground items", async () => {
         const storage = new AsyncStorage(10, 20);
         const item = {id: randomUUID(), typeId: "testItem", amount: 1};
