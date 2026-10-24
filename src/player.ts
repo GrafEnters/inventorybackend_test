@@ -38,6 +38,9 @@ export class Player {
     get armor(): number {
         return this._armor.value;
     }
+    get maxArmor(): number {
+        return this._armor.max;
+    }
 
     get pos(): Pos {
         return {...this._pos};

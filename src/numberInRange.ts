@@ -17,6 +17,9 @@ export class NumberInRange {
     get value(): number {
         return this._value;
     }
+    get max(): number {
+        return this._max;
+    }
 
     set value(value: number) {
         if (Number.isNaN(value)) {
