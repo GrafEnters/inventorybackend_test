@@ -8,7 +8,7 @@ export class Armor extends ItemType {
     constructor(type: string, maxStack: number, repairAmount: number) {
         super(type, maxStack);
         if (Number.isNaN(repairAmount)) {
-            throw new RangeError(`RestoreMax cannot be NaN`);
+            throw new RangeError(`RepairAmount cannot be NaN`);
         }
         this.repairAmount = repairAmount;
     }

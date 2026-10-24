@@ -62,6 +62,10 @@ export class Player {
         this._armor.value += delta;
     }
 
+    changeAmmo(delta: number): void {
+        this._ammo += delta;
+    }
+
     set pos(value: Pos) {
         this._pos = {...value};
     }
