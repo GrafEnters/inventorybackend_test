@@ -9,6 +9,7 @@ import type {ItemContext} from "./itemContext.js";
 import {PosMath} from "./pos.js";
 import type {GameConfig} from "./config.js";
 import type {TickProvider} from "./tickProvider.js";
+import {PromiseQueueWithKey} from "./promiseQueueWithKey.js";
 
 export class Core {
 
@@ -17,6 +18,7 @@ export class Core {
     private readonly _itemTypeRegistry: ItemTypeRegistry;
     private readonly _tickProvider: TickProvider;
     private readonly _gameConfig: GameConfig;
+    private readonly _promiseQueue: PromiseQueueWithKey = new PromiseQueueWithKey();
 
     constructor(players: PlayerRegistry, storage: IStorageWithFilters, itemTypeRegistry: ItemTypeRegistry, tickProvider: TickProvider, config: GameConfig) {
         this._players = players;
@@ -27,39 +29,43 @@ export class Core {
     }
 
     async dropItem(playerId: UUID, itemId: UUID): Promise<void> {
-        const context = await this.loadItemContext(playerId, itemId);
-        context.inventory.splice(context.itemIndex, 1);
-        await this._storage.setInventory(playerId, context.inventory);
-        await this._storage.addGroundItem(context.item, context.player.pos, this._tickProvider.tick);
-        context.itemType.onDrop(context.player);
+        return this._promiseQueue.append(playerId, async () => {
+            const context = await this.loadItemContext(playerId, itemId);
+            context.inventory.splice(context.itemIndex, 1);
+            await this._storage.setInventory(playerId, context.inventory);
+            await this._storage.addGroundItem(context.item, context.player.pos, this._tickProvider.tick);
+            context.itemType.onDrop(context.player);
+        });
     }
 
     async pickupItem(playerId: UUID, groundItemId: UUID): Promise<Result> {
-        const player = this._players.get(playerId);
-        if (player === undefined) {
-            throw new Error(`Player not found: ${playerId}`);
-        }
-        const inventory = await this._storage.getInventory(playerId);
-        const groundItem = await this._storage.getGroundItem(groundItemId);
-        if (groundItem === null) {
-            return {ok: false, reason: "GroundItem not found"};
-        }
-        const itemType = this._itemTypeRegistry.getItemType(groundItem.typeId);
-        if (itemType === undefined) {
-            throw new Error(`Unknown type: ${groundItem.typeId}`);
-        }
+        return this._promiseQueue.append(playerId, async () => {
+            const player = this._players.get(playerId);
+            if (player === undefined) {
+                throw new Error(`Player not found: ${playerId}`);
+            }
+            const inventory = await this._storage.getInventory(playerId);
+            const groundItem = await this._storage.getGroundItem(groundItemId);
+            if (groundItem === null) {
+                return {ok: false, reason: "GroundItem not found"};
+            }
+            const itemType = this._itemTypeRegistry.getItemType(groundItem.typeId);
+            if (itemType === undefined) {
+                throw new Error(`Unknown type: ${groundItem.typeId}`);
+            }
 
-        if (!PosMath.isNear(player.pos, groundItem.pos, this._gameConfig.pickupRadius)) {
-            return {ok: false, reason: "Too far away"};
-        }
-        const deleted = await this._storage.deleteGroundItem(groundItem.id);
-        if (deleted === null) {
-            return {ok: false, reason: "GroundItem already deleted"};
-        }
-        InventoryFiller.insertIntoInventory(inventory, groundItem.typeId, itemType.maxStack, groundItem.amount);
-        await this._storage.setInventory(playerId, inventory);
-        itemType.onPickup(player);
-        return {ok: true};
+            if (!PosMath.isNear(player.pos, groundItem.pos, this._gameConfig.pickupRadius)) {
+                return {ok: false, reason: "Too far away"};
+            }
+            const deleted = await this._storage.deleteGroundItem(groundItem.id);
+            if (deleted === null) {
+                return {ok: false, reason: "GroundItem already deleted"};
+            }
+            InventoryFiller.insertIntoInventory(inventory, groundItem.typeId, itemType.maxStack, groundItem.amount);
+            await this._storage.setInventory(playerId, inventory);
+            itemType.onPickup(player);
+            return {ok: true};
+        });
     }
 
     async getInventory(playerId: UUID): Promise<IItemInstance[]> {
@@ -67,30 +73,34 @@ export class Core {
     }
 
     async giveItem(playerId: UUID, typeId: string, amount: number = 1): Promise<void> {
-        const type = this._itemTypeRegistry.getItemType(typeId);
-        if (type === undefined) {
-            throw new RangeError(`Unknown type: ${typeId}`);
-        }
+        return this._promiseQueue.append(playerId, async () => {
+            const type = this._itemTypeRegistry.getItemType(typeId);
+            if (type === undefined) {
+                throw new RangeError(`Unknown type: ${typeId}`);
+            }
 
-        const inventory = await this._storage.getInventory(playerId);
-        InventoryFiller.insertIntoInventory(inventory, typeId, type.maxStack, amount);
-        await this._storage.setInventory(playerId, inventory);
+            const inventory = await this._storage.getInventory(playerId);
+            InventoryFiller.insertIntoInventory(inventory, typeId, type.maxStack, amount);
+            await this._storage.setInventory(playerId, inventory);
+
+        });
     }
 
-
     async useItem(playerId: UUID, itemId: UUID): Promise<Result> {
-        const context = await this.loadItemContext(playerId, itemId);
-        const useResult = context.itemType.onUse(context.player);
-        if (!useResult.ok) {
-            return useResult;
-        }
-        context.item.amount--;
-        if (context.item.amount === 0) {
-            context.inventory.splice(context.itemIndex, 1);
-        }
+        return this._promiseQueue.append(playerId, async () => {
+            const context = await this.loadItemContext(playerId, itemId);
+            const useResult = context.itemType.onUse(context.player);
+            if (!useResult.ok) {
+                return useResult;
+            }
+            context.item.amount--;
+            if (context.item.amount === 0) {
+                context.inventory.splice(context.itemIndex, 1);
+            }
 
-        await this._storage.setInventory(playerId, context.inventory);
-        return useResult;
+            await this._storage.setInventory(playerId, context.inventory);
+            return useResult;
+        });
     }
 
     async clearOldItems(): Promise<void> {

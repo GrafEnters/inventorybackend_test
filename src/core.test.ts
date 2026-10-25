@@ -16,15 +16,16 @@ describe("Core", () => {
 
     class TestItemType extends ItemType {
         private _usable: boolean;
+
         constructor(typeId: string, maxStack: number, usable: boolean = true) {
             super(typeId, maxStack);
             this._usable = usable;
         }
 
         onUse(player: Player): Result {
-            if(this._usable){
+            if (this._usable) {
                 return {ok: true};
-            }else{
+            } else {
                 return {ok: false, reason: "Unusable test item"};
             }
 
@@ -190,6 +191,24 @@ describe("Core", () => {
 
         assert.equal(inventories.filter(i => i.length == 0).length, 1);
         assert.equal(inventories.filter(i => i.length == 1).length, 1);
+    })
+
+    it("Two identical useItem calls only one proceeds", async () => {
+        const context = setup(20);
+        context.items.addItemType(new Add1AmmoItemType("ammo1", 5));
+        const player1 = new Player();
+        context.players.connect(player1);
+        await context.core.giveItem(player1.id, "ammo1");
+        const inventory = await context.storage.getInventory(player1.id);
+        assert.ok(inventory[0]);
+
+        const all = await Promise.allSettled([
+            context.core.useItem(player1.id, inventory[0].id),
+            context.core.useItem(player1.id, inventory[0].id)]
+        );
+        assert.equal(all.filter(i => i.status == "fulfilled").length, 1);
+        assert.equal(all.filter(i => i.status == "rejected").length, 1);
+        assert.equal(player1.ammo, 1);
     })
 
     it("Use unusable item doesn't waste it", async () => {
