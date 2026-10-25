@@ -37,7 +37,7 @@ describe("Core", () => {
         }
 
         onUse(player: Player): Result {
-            player.ammo++;
+            player.changeAmmo(1);
             return {ok: true};
         }
     }

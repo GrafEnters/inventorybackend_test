@@ -7,8 +7,8 @@ export class Ammo extends ItemType {
 
     constructor(type: string, maxStack: number, refillAmount: number) {
         super(type, maxStack);
-        if (Number.isNaN(refillAmount)) {
-            throw new RangeError(`RefillAmount cannot be NaN`);
+        if (!Number.isInteger(refillAmount) || refillAmount <= 0) {
+            throw new RangeError(`RefillAmount must be a positive integer`);
         }
         this.refillAmount = refillAmount;
     }

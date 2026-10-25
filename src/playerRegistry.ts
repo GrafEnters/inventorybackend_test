@@ -16,4 +16,7 @@ export class PlayerRegistry {
     public get(playerId: UUID): Player | undefined {
         return this.players.get(playerId);
     }
+    public getAll(): Player[] {
+        return this.players.values().toArray();
+    }
 }

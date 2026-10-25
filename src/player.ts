@@ -1,13 +1,16 @@
 import type {Pos} from "./pos.js";
 import {randomUUID, type UUID} from "node:crypto";
 import {NumberInRange} from "./numberInRange.js";
+import type {EffectOverTime} from "./effectOverTime.js";
 
 export class Player {
     public readonly id: UUID;
     private _pos: Pos = {x: 0, y: 0};
     private _health = new NumberInRange(0, 100, 100);
     private _armor = new NumberInRange(0, 100, 100);
-    private _ammo: number = 0;
+    private _ammo  = new NumberInRange(0, 99999, 0);
+
+    private readonly _effects: Map<string, EffectOverTime> = new Map();
 
     constructor(id?: UUID, pos?: Pos, health?: number, armor?: number, ammo?: number) {
         if (id) {
@@ -26,18 +29,41 @@ export class Player {
             this._armor = new NumberInRange(0, 100, armor);
         }
         if (ammo != null) {
-            this._ammo = ammo;
+            this._ammo = new NumberInRange(0, 99999, ammo);
         }
 
+    }
+
+    addEffect(effectId: string, effect: EffectOverTime, refill: boolean = false): boolean {
+        if (this._effects.has(effectId) && !refill) {
+            return false;
+        }
+        this._effects.set(effectId, effect);
+        return true;
+    }
+
+    tickAllEffects(): void {
+        for (const effectId of this._effects.keys()) {
+            const effect = this._effects.get(effectId)!;
+            effect.tickEffect(this);
+            if (effect.remainingTicks <= 0) {
+                this._effects.delete(effectId);
+            }
+        }
     }
 
     get health(): number {
         return this._health.value;
     }
 
+    get maxHealth(): number {
+        return this._health.max;
+    }
+
     get armor(): number {
         return this._armor.value;
     }
+
     get maxArmor(): number {
         return this._armor.max;
     }
@@ -47,11 +73,7 @@ export class Player {
     }
 
     get ammo(): number {
-        return this._ammo;
-    }
-
-    set ammo(value: number) {
-        this._ammo = value;
+        return this._ammo.value;
     }
 
     changeHealth(delta: number): void {
@@ -63,7 +85,10 @@ export class Player {
     }
 
     changeAmmo(delta: number): void {
-        this._ammo += delta;
+        if (!Number.isInteger(delta)) {
+            throw new RangeError("Delta must be an integer");
+        }
+        this._ammo.value += delta;
     }
 
     set pos(value: Pos) {
