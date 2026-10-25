@@ -148,7 +148,8 @@ describe("Core", () => {
         player.move({x: testConfig.pickupRadius, y: testConfig.pickupRadius});
         const result = await context.core.pickupItem(player.id, groundItemIds[0].id);
         assert.equal(result.ok, false);
-        assert.ok(groundItemIds[0]);
+        const groundItemIdsAfter = await context.storage.getGroundItemsInRange({x: 1, y: 1}, testConfig.pickupRadius);
+        assert.ok(groundItemIdsAfter[0]);
     })
 
     it("Items disappear after its lifetime ends", async () => {
@@ -238,6 +239,58 @@ describe("Core", () => {
         const inventoryAfter = await context.storage.getInventory(player1.id);
         assert.equal(inventoryAfter.length, 0);
         assert.equal(player1.ammo, 1);
+    });
+
+    it("On drop calls", async () => {
+        class DropItemType extends ItemType {
+            public isDropped: boolean = false;
+
+            constructor(typeId: string, maxStack: number) {
+                super(typeId, maxStack);
+            }
+
+            onDrop(player: Player) {
+                super.onDrop(player);
+                this.isDropped = true;
+            }
+        }
+
+        const context = setup();
+        const dropItem = new DropItemType("drop", 1);
+        context.items.addItemType(dropItem);
+        const player1 = new Player();
+        context.players.connect(player1);
+        await context.core.giveItem(player1.id, "drop");
+        const inventory = await context.storage.getInventory(player1.id);
+        assert.ok(inventory[0]);
+        await context.core.dropItem(player1.id, inventory[0].id);
+        assert.equal(dropItem.isDropped, true);
+    });
+
+    it("On pickup calls", async () => {
+        class PickItemType extends ItemType {
+            public isPicked: boolean = false;
+
+            constructor(typeId: string, maxStack: number) {
+                super(typeId, maxStack);
+            }
+
+            onPickup(player: Player) {
+                super.onPickup(player);
+                this.isPicked = true;
+            }
+        }
+
+        const context = setup();
+        const dropItem = new PickItemType("pick", 1);
+        context.items.addItemType(dropItem);
+        const player1 = new Player();
+        context.players.connect(player1);
+        const item: IItemInstance = {id: randomUUID(), typeId: "pick", amount: 1};
+        await context.storage.addGroundItem(item, {x: 1, y: 1}, 0);
+        player1.pos = {x: 1, y: 1};
+        await context.core.pickupItem(player1.id, item.id);
+        assert.equal(dropItem.isPicked, true);
     });
 
 });

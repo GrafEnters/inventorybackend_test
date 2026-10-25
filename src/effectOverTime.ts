@@ -15,8 +15,8 @@ export abstract class EffectOverTime {
     }
 
     protected constructor(remainingTicks: number) {
-        if (Number.isNaN(remainingTicks) || remainingTicks <= 0) {
-            throw new RangeError(`Remaining Ticks must be greater than 0 ${remainingTicks}`);
+        if (!Number.isInteger(remainingTicks) || remainingTicks <= 0) {
+            throw new RangeError(`Remaining Ticks must be integer greater than 0 ${remainingTicks}`);
         }
         this._remainingTicks = remainingTicks;
     }

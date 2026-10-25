@@ -9,6 +9,7 @@ import type {Player} from "./player.js";
 import {Armor} from "./items/armor.js";
 import {Ammo} from "./items/ammo.js";
 import {Bandage} from "./items/bandage.js";
+import {DemoScenario} from "./demoScenario.js";
 
 const tickIntervalInSeconds = 1;
 const gameLoop = new GameLoop(tickIntervalInSeconds);
@@ -18,11 +19,11 @@ const itemTypes = new ItemTypeRegistry();
 itemTypes.addItemType(new Medkit("medkit", 10, 75));
 itemTypes.addItemType(new Armor("armor", 10, 60));
 itemTypes.addItemType(new Ammo("ammo", 30, 90));
-itemTypes.addItemType(new Bandage("bandage", 10, 2, 60));
+itemTypes.addItemType(new Bandage("bandage", 10, 2, 15));
 
 const players = new PlayerRegistry();
 const storage = new AsyncStorage(100, 200);
-const config: GameConfig = {pickupRadius: 5, itemLifetimeTicks: 60};
+const config: GameConfig = {pickupRadius: 5, itemLifetimeTicks: 20};
 const core: Core = new Core(players, storage, itemTypes, gameLoop, config);
 
 gameLoop.subscribe(tick => {
@@ -36,3 +37,16 @@ gameLoop.subscribe(tick => {
 
 })
 gameLoop.start();
+
+
+// ===== Демо-сценарий =====
+
+const scenario = new DemoScenario(core, players, storage, gameLoop, config);
+try {
+    await scenario.run();
+    console.log("Сценарий завершён");
+} catch (error) {
+    console.error("Сценарий упал:", error);
+} finally {
+    gameLoop.stop();
+}

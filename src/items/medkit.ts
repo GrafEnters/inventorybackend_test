@@ -8,8 +8,8 @@ export class Medkit extends ItemType {
 
     constructor(type: string, maxStack: number, restoreMax: number) {
         super(type, maxStack);
-        if (Number.isNaN(restoreMax)) {
-            throw new RangeError(`RestoreMax cannot be NaN`);
+        if (Number.isNaN(restoreMax) || restoreMax <= 0) {
+            throw new RangeError(`RestoreMax must be greater than 0: ${restoreMax}`);
         }
         this.restoreMax = restoreMax;
     }

@@ -12,8 +12,8 @@ export class Bandage extends ItemType {
         if (Number.isNaN(healPerTick) || healPerTick <= 0) {
             throw new RangeError(`HealPerTick must be greater than 0, cur: ${healPerTick}`);
         }
-        if (Number.isNaN(duration) || duration <= 0) {
-            throw new RangeError(`Duration must be greater than 0, cur: ${duration}`);
+        if (!Number.isInteger(duration) || duration <= 0) {
+            throw new RangeError(`Duration must be integer greater than 0, cur: ${duration}`);
         }
         this.healPerTick = healPerTick;
         this.duration = duration;

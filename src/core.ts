@@ -69,7 +69,9 @@ export class Core {
     }
 
     async getInventory(playerId: UUID): Promise<IItemInstance[]> {
-        return this._storage.getInventory(playerId);
+        return this._promiseQueue.append(playerId, async () => {
+            return this._storage.getInventory(playerId);
+        });
     }
 
     async giveItem(playerId: UUID, typeId: string, amount: number = 1): Promise<void> {
